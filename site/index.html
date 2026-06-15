@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#002868">
   <title>WK 2026 Poule</title>
-  <link rel="stylesheet" href="style.mobile.css">
+  <link rel="stylesheet" href="style.mobile.fixed.css">
 </head>
 <body>
   <div class="page">
@@ -18,8 +18,8 @@
       </div>
     </div>
 
-    <div class="layout-grid">
-      <main class="left-column">
+    <div class="app-shell">
+      <main class="content-pane">
         <section id="matchesView" class="view active-view">
           <div id="matchesContainer" class="cards-groups"></div>
         </section>
@@ -29,7 +29,7 @@
         </section>
       </main>
 
-      <aside class="right-column">
+      <aside class="stand-pane">
         <section class="stand-panel">
           <div class="bar red">Stand</div>
           <div class="table-wrap stand-wrap">
@@ -52,6 +52,6 @@
   </div>
 
   <script src="data.js"></script>
-  <script src="app.mobile.js"></script>
+  <script src="app.mobile.fixed.js"></script>
 </body>
 </html>

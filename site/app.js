@@ -21,7 +21,6 @@ function bindToggle() {
       document.querySelectorAll('.toggle-btn').forEach(b => b.classList.toggle('active', b === btn));
       els.matchesView.classList.toggle('active-view', view === 'matches');
       els.bonusView.classList.toggle('active-view', view === 'bonus');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   });
 }
@@ -35,11 +34,11 @@ function renderStand() {
 
   els.standBody.innerHTML = rows.map((row, index) => `
     <tr>
-      <td data-label="Rang">${e(String(index + 1))}</td>
-      <td data-label="Deelnemer">${e(row.deelnemer)}</td>
-      <td data-label="Wedstr.">${e(String(row.punten_wedstrijden ?? 0))}</td>
-      <td data-label="Bonus">${e(String(row.punten_bonus ?? 0))}</td>
-      <td data-label="Totaal">${e(String(row.totaal ?? 0))}</td>
+      <td>${e(String(index + 1))}</td>
+      <td>${e(row.deelnemer)}</td>
+      <td>${e(String(row.punten_wedstrijden ?? 0))}</td>
+      <td>${e(String(row.punten_bonus ?? 0))}</td>
+      <td>${e(String(row.totaal ?? 0))}</td>
     </tr>
   `).join('');
 }
