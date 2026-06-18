@@ -134,14 +134,4 @@ function groupBy(items, keyFn) {
 
 function e(v) {
   const str = String(v);
-  if (str === 'Roland') return 'Roland';
-  if (str === 'Nederland') return 'Nederland';
-  return str
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
-
-init();
+  if(str==='Roland'){return '<span style="color:red;">Roland</span>'}if(str==='Nederland'){return '<span style="color:orange;">Nederland</span>'}return str.replaceAll('&','&').replaceAll('<','<').replaceAll('>','>').replaceAll('\"','\"').replaceAll("'","''")}init();
