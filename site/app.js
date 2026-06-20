@@ -1,11 +1,11 @@
 const data = window.POULE_DATA || {};
+
 const els = {
   matchesContainer: document.getElementById('matchesContainer'),
   bonusContainer: document.getElementById('bonusContainer'),
   standBody: document.querySelector('#standTable tbody'),
   matchesView: document.getElementById('matchesView'),
-  bonusView: document.getElementById('bonusView'),
-  standView: document.getElementById('standView')
+  bonusView: document.getElementById('bonusView')
 };
 
 function init() {
@@ -22,7 +22,6 @@ function bindToggle() {
       document.querySelectorAll('.toggle-btn').forEach(b => b.classList.toggle('active', b === btn));
       els.matchesView.classList.toggle('active-view', view === 'matches');
       els.bonusView.classList.toggle('active-view', view === 'bonus');
-      els.standView.classList.toggle('active-view', view === 'stand');
     });
   });
 }
@@ -46,16 +45,75 @@ function renderStand() {
 }
 
 function renderMatches() {
-  const grouped = groupBy(data.matches || [], m => `${m.datum_iso || m.datum || 'zonder-datum'}||${m.datum || 'Onbekende datum'}||${m.fase || 'Wedstrijd'}`);
-  els.matchesContainer.innerHTML = Object.entries(grouped).map(([groupKey, groupMatches]) => {
-    const [, dateLabel, phaseLabel] = groupKey.split('||');
+  const phaseOrder = ['Groepsfase', 'Zestiende finales', 'Achtste finales', 'Kwartfinales', 'Halve finales', 'Troostfinale', 'Finale'];
+  const targetPhases = new Set(['Groepsfase', 'Zestiende finales', 'Achtste finales', 'Kwartfinales', 'Halve finales']);
+
+  const matches = [...(data.matches || [])];
+  const groupedByPhase = groupBy(matches, m => m.fase || 'Wedstrijden');
+
+  const sortedPhaseEntries = Object.entries(groupedByPhase).sort((a, b) => {
+    const ai = phaseOrder.indexOf(a[0]);
+    const bi = phaseOrder.indexOf(b[0]);
+    const av = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
+    const bv = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
+    return av - bv || a[0].localeCompare(b[0]);
+  });
+
+  els.matchesContainer.innerHTML = sortedPhaseEntries.map(([phase, phaseMatches]) => {
+    const byDate = groupBy(phaseMatches, m => `${m.datum_iso || ''}||${m.datum || 'Onbekende datum'}`);
+
+    const sortedDateEntries = Object.entries(byDate).sort((a, b) => {
+      const [aIso, aLabel] = a[0].split('||');
+      const [bIso, bLabel] = b[0].split('||');
+
+      if (targetPhases.has(phase)) {
+        return compareDateDesc(aIso, bIso, aLabel, bLabel);
+      }
+      return compareDateAsc(aIso, bIso, aLabel, bLabel);
+    });
+
     return `
       <section class="group">
-        <div class="bar blue group-header"><span>${e(dateLabel)}</span><span class="fase">${e(phaseLabel)}</span></div>
-        <div class="cards-grid">${groupMatches.map(renderMatchCard).join('')}</div>
+        <div class="bar red group-header">
+          <span>${e(phase)}</span>
+        </div>
+        ${sortedDateEntries.map(([dateKey, dateMatches]) => {
+          const [, dateLabel] = dateKey.split('||');
+          const sortedMatches = [...dateMatches].sort((a, b) => compareTimeAsc(a.tijd, b.tijd));
+
+          return `
+            <div class="card-shell">
+              <div class="bar blue group-header">
+                <span>${e(dateLabel)}</span>
+                <span class="fase">${e(phase)}</span>
+              </div>
+              <div class="cards-grid">
+                ${sortedMatches.map(renderMatchCard).join('')}
+              </div>
+            </div>
+          `;
+        }).join('')}
       </section>
     `;
   }).join('');
+}
+
+function compareDateDesc(aIso, bIso, aLabel = '', bLabel = '') {
+  const aVal = aIso || '';
+  const bVal = bIso || '';
+  return bVal.localeCompare(aVal) || bLabel.localeCompare(aLabel);
+}
+
+function compareDateAsc(aIso, bIso, aLabel = '', bLabel = '') {
+  const aVal = aIso || '';
+  const bVal = bIso || '';
+  return aVal.localeCompare(bVal) || aLabel.localeCompare(bLabel);
+}
+
+function compareTimeAsc(a, b) {
+  const aVal = (a || '').padStart(5, '0');
+  const bVal = (b || '').padStart(5, '0');
+  return aVal.localeCompare(bVal);
 }
 
 function renderMatchCard(match) {
@@ -63,7 +121,10 @@ function renderMatchCard(match) {
   const rows = (data.participants || []).map(name => {
     const prediction = match.predictions?.[name];
     const points = match.points?.[name] ?? 0;
-    const cls = prediction == null || prediction === '' ? 'points-zero' : (points >= 10 ? 'points-good' : points > 0 ? 'points-mid' : 'points-zero');
+    const cls = prediction == null || prediction === ''
+      ? 'points-zero'
+      : (points >= 10 ? 'points-good' : points > 0 ? 'points-mid' : 'points-zero');
+
     return `
       <tr>
         <td>${e(name)}</td>
@@ -74,15 +135,19 @@ function renderMatchCard(match) {
   }).join('');
 
   return `
-    <article class="card card-shell">
-      <div class="bar red match-bar">
+    <article class="card">
+      <div class="bar blue match-bar">
         <div class="match-item">${e(match.tijd || '')}</div>
         <div class="match-item match-home">${e(match.thuis)}</div>
         <div class="match-item">${e(result)}</div>
         <div class="match-item match-away">${e(match.uit)}</div>
       </div>
       <table class="data-table">
-        <tr><th>Deelnemer</th><th>Voorspelling</th><th>Punten</th></tr>
+        <tr>
+          <th>Deelnemer</th>
+          <th>Voorspelling</th>
+          <th>Punten</th>
+        </tr>
         ${rows}
       </table>
     </article>
@@ -92,8 +157,8 @@ function renderMatchCard(match) {
 function renderBonus() {
   els.bonusContainer.innerHTML = `
     <section class="group">
-      <div class="bar blue">Bonusvragen</div>
-      <div class="cards-groups">${(data.bonus_questions || []).map(renderBonusCard).join('')}</div>
+      <div class="bar red">Bonusvragen</div>
+      ${(data.bonus_questions || []).map(renderBonusCard).join('')}
     </section>
   `;
 }
@@ -103,6 +168,7 @@ function renderBonusCard(question) {
     const answer = question.antwoorden?.[name] ?? '—';
     const points = question.punten?.[name] ?? 0;
     const cls = points >= 10 ? 'points-good' : points > 0 ? 'points-mid' : 'points-zero';
+
     return `
       <tr>
         <td>${e(name)}</td>
@@ -113,11 +179,15 @@ function renderBonusCard(question) {
   }).join('');
 
   return `
-    <article class="card card-shell">
-      <div class="bar red bonus-question-bar">Bonusvraag ${e(String(question.nr || ''))}: ${e(question.vraag || '')}</div>
+    <article class="card-shell">
+      <div class="bar blue bonus-question-bar">Bonusvraag ${e(String(question.nr || ''))}: ${e(question.vraag || '')}</div>
       <div class="correct-answer">Correct antwoord: ${e(question.correct_antwoord || 'nog niet ingevuld')}</div>
       <table class="data-table">
-        <tr><th>Deelnemer</th><th>Antwoord</th><th>Punten</th></tr>
+        <tr>
+          <th>Deelnemer</th>
+          <th>Antwoord</th>
+          <th>Punten</th>
+        </tr>
         ${rows}
       </table>
     </article>
@@ -134,4 +204,14 @@ function groupBy(items, keyFn) {
 
 function e(v) {
   const str = String(v);
-  if(str==='Roland'){return '<span style="color:red;">Roland</span>'}if(str==='Nederland'){return '<span style="color:orange;">Nederland</span>'}return str.replaceAll('&','&').replaceAll('<','<').replaceAll('>','>').replaceAll('\"','\"').replaceAll("'","''")}init();
+  if (str === 'Roland') return 'Roland';
+  if (str === 'Nederland') return 'Nederland';
+  return str
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+init();
