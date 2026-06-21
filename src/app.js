@@ -46,7 +46,13 @@ function renderStand() {
 }
 
 function renderMatches() {
-  const grouped = groupBy(data.matches || [], m => `${m.datum_iso || m.datum || 'zonder-datum'}||${m.datum || 'Onbekende datum'}||${m.fase || 'Wedstrijd'}`);
+  const hiddenStart = '2026-06-11';
+  const hiddenEnd = '2026-06-19';
+  const visibleMatches = (data.matches || []).filter(m => {
+    const date = m.datum_iso || '';
+    return !(date >= hiddenStart && date <= hiddenEnd);
+  });
+  const grouped = groupBy(visibleMatches, m => `${m.datum_iso || m.datum || 'zonder-datum'}||${m.datum || 'Onbekende datum'}||${m.fase || 'Wedstrijd'}`);
   els.matchesContainer.innerHTML = Object.entries(grouped).map(([groupKey, groupMatches]) => {
     const [, dateLabel, phaseLabel] = groupKey.split('||');
     return `
