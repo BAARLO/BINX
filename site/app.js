@@ -16,7 +16,6 @@ function init() {
   
   // pas scrollen nadat alles gerenderd is
   setTimeout(scrollToToday, 150);
-
 }
 
 function bindToggle() {
