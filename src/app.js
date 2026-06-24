@@ -13,6 +13,9 @@ function init() {
   renderMatches();
   renderBonus();
   bindToggle();
+  
+  // pas scrollen nadat alles gerenderd is
+  setTimeout(scrollToToday, 150);
 }
 
 function bindToggle() {
@@ -46,12 +49,6 @@ function renderStand() {
 }
 
 function renderMatches() {
-  const hiddenStart = '2026-06-11';
-  const hiddenEnd = '2026-06-23';
-  const visibleMatches = (data.matches || []).filter(m => {
-    const date = m.datum_iso || '';
-    return !(date >= hiddenStart && date <= hiddenEnd);
-  });
   const grouped = groupBy(visibleMatches, m => `${m.datum_iso || m.datum || 'zonder-datum'}||${m.datum || 'Onbekende datum'}||${m.fase || 'Wedstrijd'}`);
   els.matchesContainer.innerHTML = Object.entries(grouped).map(([groupKey, groupMatches]) => {
     const [, dateLabel, phaseLabel] = groupKey.split('||');
