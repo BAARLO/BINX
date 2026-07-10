@@ -47,7 +47,7 @@ function renderStand() {
 
 function renderMatches() {
   const hiddenStart = '2026-06-11';
-  const hiddenEnd = '2026-07-05';
+  const hiddenEnd = '2026-07-08';
   const visibleMatches = (data.matches || []).filter(m => {
     const date = m.datum_iso || '';
     return !(date >= hiddenStart && date <= hiddenEnd);
